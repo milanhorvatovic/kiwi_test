@@ -26,6 +26,7 @@ internal final class DestinationPageViewController: UIViewController {
     @IBOutlet weak var departureLabel: UILabel!
     @IBOutlet weak var stopsLabel: UILabel!
     @IBOutlet weak var distanceLabel: UILabel!
+    @IBOutlet weak var flightDuration: UILabel!
     
     internal var index: Int = -1
     
@@ -77,6 +78,7 @@ internal final class DestinationPageViewController: UIViewController {
         self.departureLabel.text = "Departure: \n\(type(of: self).dateFormatter.string(from: Date(timeIntervalSince1970: data.departureTime)))"
         self.arrivalLabel.text = "Arrival: \n\(type(of: self).dateFormatter.string(from: Date(timeIntervalSince1970: data.arrivalTime)))"
         self.distanceLabel.text = "\(data.distance) km"
+        self.flightDuration.text = data.durationFlight
     }
     
 }
