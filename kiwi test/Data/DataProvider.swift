@@ -65,7 +65,6 @@ internal class DataProvider {
             }
             self.findDestination(
                 location: value.city.from.code
-                , destination: value.city.to.code
                 , from: .init()
                 , { [weak self] (data: Model.Service.Response.Destination?, error: Error?) in
                     guard let data: Model.Service.Response.Destination = data else {
@@ -93,7 +92,7 @@ internal class DataProvider {
         try self.datastorage.store(destination: value)
     }
     
-    internal func findDestination(location: String, destination: String, from: Date, _ closure: @escaping (Model.Service.Response.Destination?, Error?) -> Void) {
+    internal func findDestination(location: String, from: Date, _ closure: @escaping (Model.Service.Response.Destination?, Error?) -> Void) {
         if let value: Int = self.findDestinationIdentificator {
             self.service.cancel(for: value)
         }
@@ -103,7 +102,6 @@ internal class DataProvider {
         }
         self.findDestinationIdentificator = self.service.search(
             location: location
-            , destination: destination
             , from: from
             , to: to
             , closure: { [weak self] (data: Model.Service.Response.Destination?, error: Error?) in

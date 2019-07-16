@@ -115,17 +115,18 @@ extension Service.Manager {
     }
     
     @discardableResult
-    internal func search(location: String, destination: String, from: Date, to: Date, closure: @escaping (Model.Service.Response.Destination?, Error?) -> Void) -> Int {
+    internal func search(location: String, from: Date, to: Date, closure: @escaping (Model.Service.Response.Destination?, Error?) -> Void) -> Int {
         let endpoint: Endpoint = .init(
             path: "/flights",
             queryItems: [
-                URLQueryItem(name: "sort", value: "popularity")
+                URLQueryItem(name: "v", value: "2")
+                , URLQueryItem(name: "sort", value: "popularity")
                 , URLQueryItem(name: "asc", value: "0")
                 , URLQueryItem(name: "limit", value: "5")
+                , URLQueryItem(name: "typeFlight", value: "oneway")
                 , URLQueryItem(name: "dateFrom", value: type(of: self).dateFormatter.string(from: from))
                 , URLQueryItem(name: "dateTo", value: type(of: self).dateFormatter.string(from: to))
                 , URLQueryItem(name: "fly_from", value: location)
-                , URLQueryItem(name: "fly_to", value: destination)
             ]
         )
         let request: URLRequest = .init(url: endpoint.url!)

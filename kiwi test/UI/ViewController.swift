@@ -11,7 +11,7 @@ import UIKit
 internal final class ViewController: UIViewController {
 
     @IBOutlet private weak var departureButton: UIButton!
-    @IBOutlet private weak var destinationButton: UIButton!
+    @IBOutlet private weak var departureLabel: UILabel!
     @IBOutlet private weak var overlay: UIView!
     @IBOutlet private weak var noContentLabel: UILabel!
     @IBOutlet private weak var pageViewContainer: UIView!
@@ -27,14 +27,8 @@ internal final class ViewController: UIViewController {
     
     internal var departure: Model.Service.Location? {
         didSet {
-            self.updateCity(departure: self.departure, destination: self.destination)
-            self.reloadDestination(departure: self.departure, destination: self.destination)
-        }
-    }
-    internal var destination: Model.Service.Location? {
-        didSet {
-            self.updateCity(departure: self.departure, destination: self.destination)
-            self.reloadDestination(departure: self.departure, destination: self.destination)
+            self.update(city: self.departure)
+            self.reloadDestination(departure: self.departure)
         }
     }
     internal var data: Model.Datastorage.Destination? {
@@ -54,7 +48,6 @@ internal final class ViewController: UIViewController {
             guard let data: Model.Datastorage.Destination = data else {
                 DispatchQueue.main.async(execute: { [weak self] in
                     self?.departure = .none
-                    self?.destination = .none
                     self?.data = .none
                 })
                 return
@@ -63,7 +56,6 @@ internal final class ViewController: UIViewController {
             DispatchQueue.main.async(execute: { [weak self] in
                 self?.data = data
                 self?.departure = data.city.from
-                self?.destination = data.city.to
             })
             
         })
@@ -79,20 +71,20 @@ internal final class ViewController: UIViewController {
             ((segue.destination as? UINavigationController)?.viewControllers.first as? LocationViewController)?.selectionClosure = { [weak self] (data: Model.Service.Location) in
                 self?.departure = data
             }
-        case "DestinationSegueIdentifier":
-            ((segue.destination as? UINavigationController)?.viewControllers.first as? LocationViewController)?.dataProvider = self.dataProvider
-            ((segue.destination as? UINavigationController)?.viewControllers.first as? LocationViewController)?.title = "Locating destination:"
-            ((segue.destination as? UINavigationController)?.viewControllers.first as? LocationViewController)?.selectionClosure = { [weak self] (data: Model.Service.Location) in
-                self?.destination = data
-            }
         default:
             break
         }
     }
     
-    private func updateCity(departure: Model.Service.Location?, destination: Model.Service.Location?) {
-        self.departureButton.setTitle(departure?.name ?? "Select departure", for: .normal)
-        self.destinationButton.setTitle(destination?.name ?? "Select destination", for: .normal)
+    private func update(city departure: Model.Service.Location?) {
+        switch departure?.name {
+        case .some(let value):
+            self.departureButton.setTitle("Exchange", for: .normal)
+            self.departureLabel.text = value
+        case .none:
+            self.departureButton.setTitle("Set", for: .normal)
+            self.departureLabel.text = .none
+        }
     }
     
     private func update(destination: Model.Datastorage.Destination?) {
@@ -124,16 +116,13 @@ internal final class ViewController: UIViewController {
         self.pageControl.currentPage = 0
     }
     
-    private func reloadDestination(departure: Model.Service.Location?, destination: Model.Service.Location?) {
-        guard let departure: Model.Service.Location = departure
-            , let destination: Model.Service.Location = destination
-            else
-        {
+    private func reloadDestination(departure: Model.Service.Location?) {
+        guard let departure: Model.Service.Location = departure else {
             return
         }
         
         if let data: Model.Datastorage.Destination = self.data
-            , data.city.from == departure && data.city.to == destination
+            , data.city.from == departure
         {
             return
         }
@@ -146,7 +135,6 @@ internal final class ViewController: UIViewController {
         )
         self.dataProvider?.findDestination(
             location: departure.code
-            , destination: destination.code
             , from: .init()
             , { [weak self] (data: Model.Service.Response.Destination?, error: Error?) in
                 defer {
@@ -160,22 +148,52 @@ internal final class ViewController: UIViewController {
                     })
                 }
                 guard case .none = error else {
+                    DispatchQueue.main.async(execute: { [weak self] in
+                        guard let selfStrong = self else {
+                            return
+                        }
+                        let alertController: UIAlertController = .init(title: "Error", message: error?.localizedDescription ?? "", preferredStyle: .alert)
+                        alertController.addAction(
+                            .init(
+                                title: "OK"
+                                , style: .cancel
+                                , handler: { [weak alertController] (action: UIAlertAction) in
+                                    alertController?.dismiss(animated: true, completion: .none)
+                                }
+                            )
+                        )
+                        selfStrong.present(alertController, animated: true, completion: .none)
+                    })
                     return
                 }
                 guard let data: Model.Service.Response.Destination = data else {
                     return
                 }
-                print(data)
                 
                 do {
-                    let data: Model.Datastorage.Destination = .init(city: .init(from: departure, to: destination), destination: data.destination)
+                    let data: Model.Datastorage.Destination = .init(city: .init(from: departure), destination: data.destination)
                     try self?.dataProvider?.store(destination: data)
                     DispatchQueue.main.async(execute: { [weak self] in
                         self?.data = data
                     })
                 }
                 catch {
-                    print(error)
+                    DispatchQueue.main.async(execute: { [weak self] in
+                        guard let selfStrong = self else {
+                            return
+                        }
+                        let alertController: UIAlertController = .init(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                        alertController.addAction(
+                            .init(
+                                title: "OK"
+                                , style: .cancel
+                                , handler: { [weak alertController] (action: UIAlertAction) in
+                                    alertController?.dismiss(animated: true, completion: .none)
+                                }
+                            )
+                        )
+                        selfStrong.present(alertController, animated: true, completion: .none)
+                    })
                 }
             }
         )
