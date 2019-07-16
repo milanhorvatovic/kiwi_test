@@ -32,9 +32,12 @@ extension Model.Service.Response {
         
         internal let destination: [Model.Service.Destination]
         
+        internal let currency: String
+        
         private enum CodingKeys: String, CodingKey {
             
             case destination = "data"
+            case currency
             
         }
         

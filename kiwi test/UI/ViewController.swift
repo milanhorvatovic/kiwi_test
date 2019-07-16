@@ -171,7 +171,7 @@ internal final class ViewController: UIViewController {
                 }
                 
                 do {
-                    let data: Model.Datastorage.Destination = .init(city: .init(from: departure), destination: data.destination)
+                    let data: Model.Datastorage.Destination = .init(city: .init(from: departure), destination: data.destination, currency: data.currency)
                     try self?.dataProvider?.store(destination: data)
                     DispatchQueue.main.async(execute: { [weak self] in
                         self?.data = data
@@ -249,6 +249,7 @@ extension ViewController: UIPageViewControllerDataSource {
         let index: Int = Int(index)
         let viewController: DestinationPageViewController = self.storyboard!.instantiateViewController(withIdentifier: "DestinationPageViewControllerIdentifier") as! DestinationPageViewController
         viewController.index = index
+        viewController.currencyCode = self.data?.currency
         viewController.data = self.data?.destination[index]
         //viewController.view.backgroundColor = .init(red: CGFloat.random(in: 1 ..< 255) / 255, green: CGFloat.random(in: 1 ..< 255) / 255, blue: CGFloat.random(in: 1 ..< 255) / 255, alpha: 1.0)
         return viewController

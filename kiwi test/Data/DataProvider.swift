@@ -72,7 +72,7 @@ internal class DataProvider {
                         return
                     }
                     
-                    let destination: Model.Datastorage.Destination = .init(city: value.city, destination: data.destination)
+                    let destination: Model.Datastorage.Destination = .init(city: value.city, destination: data.destination, currency: data.currency)
                     do {
                         try self?.datastorage.store(destination: destination)
                         closure(destination, .none)

@@ -18,6 +18,15 @@ internal final class DestinationPageViewController: UIViewController {
         return formatter
     }()
     
+    fileprivate static let currencyFormatter: NumberFormatter = {
+        let formatter: NumberFormatter = .init()
+        formatter.usesGroupingSeparator = true
+        formatter.numberStyle = .currency
+        formatter.numberStyle = .currencyAccounting
+        formatter.maximumFractionDigits = 0
+        return formatter
+    }()
+    
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var fromLabel: UILabel!
     @IBOutlet weak var destinationLabel: UILabel!
@@ -38,6 +47,13 @@ internal final class DestinationPageViewController: UIViewController {
             self.update(from: data)
         }
     }
+    internal var currencyCode: String? {
+        didSet {
+            if let currencyCode: String = self.currencyCode {
+                type(of: self).currencyFormatter.currencyCode = currencyCode
+            }
+        }
+    }
     
     internal override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,7 +70,7 @@ internal final class DestinationPageViewController: UIViewController {
         }
         self.fromLabel.text = "From: \(data.cityFrom)"
         self.destinationLabel.text = "To: \(data.cityTo)"
-        self.priceLabel.text = "\(data.price)"
+        self.priceLabel.text = type(of: self).currencyFormatter.string(for: data.price)
         
         switch data.route.count {
         case 0:
